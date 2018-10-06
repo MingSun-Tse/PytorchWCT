@@ -25,6 +25,7 @@ parser.add_argument('--decoder4', default='models/feature_invertor_conv4_1.t7', 
 parser.add_argument('--decoder3', default='models/feature_invertor_conv3_1.t7', help='Path to the decoder3')
 parser.add_argument('--decoder2', default='models/feature_invertor_conv2_1.t7', help='Path to the decoder2')
 parser.add_argument('--decoder1', default='models/feature_invertor_conv1_1.t7', help='Path to the decoder1')
+parser.add_argument('--mode', default=None)
 parser.add_argument('--cuda', action='store_true', help='enables cuda')
 parser.add_argument('--batch_size', type=int, default=1, help='batch size')
 parser.add_argument('--fineSize', type=int, default=512, help='resize image to fineSize x fineSize,leave it to 0 if not resize')
@@ -75,15 +76,16 @@ def styleTransfer(contentImg,styleImg,imname,csF):
     cF2 = cF2.data.cpu().squeeze(0)
     csF2 = wct.transform(cF2,sF2,csF,args.alpha)
     Im2 = wct.d2(csF2)
-
+    
     sF1 = wct.e1(styleImg)
     cF1 = wct.e1(Im2)
     sF1 = sF1.data.cpu().squeeze(0)
     cF1 = cF1.data.cpu().squeeze(0)
     csF1 = wct.transform(cF1,sF1,csF,args.alpha)
     Im1 = wct.d1(csF1)
+    
     # save_image has this wired design to pad images with 4 pixels at default.
-    vutils.save_image(Im1.data.cpu().float(),os.path.join(args.outf,imname))
+    vutils.save_image(Im1.data.cpu().float(),os.path.join(args.outf, str(args.alpha)+"_"+imname))
     return
 
 avgTime = 0

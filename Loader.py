@@ -21,7 +21,10 @@ class Dataset(data.Dataset):
     def __init__(self,contentPath,stylePath,fineSize):
         super(Dataset,self).__init__()
         self.contentPath = contentPath
-        self.image_list = [x for x in listdir(contentPath) if is_image_file(x)]
+        self.content_image_list = [x for x in listdir(contentPath) if is_image_file(x)]
+        self.style_image_list = [x for x in listdir(stylePath) if is_image_file(x)]
+        rand = np.random.permutation(len(self.style_image_list))
+        self.style_image_list = np.array(self.style_image_list)[rand]
         self.stylePath = stylePath
         self.fineSize = fineSize
         #self.normalize = transforms.Normalize(mean=[103.939,116.779,123.68],std=[1, 1, 1])
@@ -32,34 +35,34 @@ class Dataset(data.Dataset):
                     #transforms.Lambda(lambda x: x[torch.LongTensor([2,1,0])]), #turn to BGR
                     ])
 
-    def __getitem__(self,index):
-        contentImgPath = os.path.join(self.contentPath,self.image_list[index])
-        styleImgPath = os.path.join(self.stylePath,self.image_list[index])
+    def __getitem__(self, index):
+        contentImgPath = os.path.join(self.contentPath, self.content_image_list[index])
+        styleImgPath = os.path.join(self.stylePath, self.style_image_list[index])
         contentImg = default_loader(contentImgPath)
         styleImg = default_loader(styleImgPath)
 
         # resize
-        if(self.fineSize != 0):
-            w,h = contentImg.size
-            if(w > h):
-                if(w != self.fineSize):
-                    neww = self.fineSize
-                    newh = int(h*neww/w)
-                    contentImg = contentImg.resize((neww,newh))
-                    styleImg = styleImg.resize((neww,newh))
-            else:
-                if(h != self.fineSize):
-                    newh = self.fineSize
-                    neww = int(w*newh/h)
-                    contentImg = contentImg.resize((neww,newh))
-                    styleImg = styleImg.resize((neww,newh))
+        # if(self.fineSize != 0):
+            # w, h = contentImg.size
+            # if(w > h):
+                # if(w != self.fineSize):
+                    # neww = self.fineSize
+                    # newh = int(h*neww/w)
+                    # contentImg = contentImg.resize((neww, newh))
+                    # styleImg = styleImg.resize((2048, 2048))
+            # else:
+                # if(h != self.fineSize):
+                    # newh = self.fineSize
+                    # neww = int(w*newh/h)
+                    # contentImg = contentImg.resize((neww,newh))
+                    # styleImg = styleImg.resize((2048, 2048))
 
 
         # Preprocess Images
         contentImg = transforms.ToTensor()(contentImg)
         styleImg = transforms.ToTensor()(styleImg)
-        return contentImg.squeeze(0),styleImg.squeeze(0),self.image_list[index]
+        return contentImg.squeeze(0),styleImg.squeeze(0), self.content_image_list[index].split(".")[0] + "+" + self.style_image_list[index].split(".")[0] + ".jpg"
 
     def __len__(self):
         # You should change 0 to the total size of your dataset.
-        return len(self.image_list)
+        return len(self.content_image_list)
