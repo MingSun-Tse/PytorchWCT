@@ -18,13 +18,15 @@ def default_loader(path):
     return Image.open(path).convert('RGB')
 
 class Dataset(data.Dataset):
-    def __init__(self,contentPath,stylePath,fineSize):
+    def __init__(self, contentPath, stylePath, fineSize, picked_content_mark, picked_style_mark):
         super(Dataset,self).__init__()
         self.contentPath = contentPath
-        self.content_image_list = [x for x in listdir(contentPath) if is_image_file(x)]
-        self.style_image_list = [x for x in listdir(stylePath) if is_image_file(x)]
-        rand = np.random.permutation(len(self.style_image_list))
-        self.style_image_list = np.array(self.style_image_list)[rand]
+        self.content_image_list = [x for x in listdir(contentPath) if is_image_file(x) and picked_content_mark in x]
+        self.style_image_list = [x for x in listdir(stylePath) if is_image_file(x) and picked_style_mark in x]
+        if picked_style_mark != ".":
+          self.style_image_list *= len(self.content_image_list)
+        rand_order = np.random.permutation(len(self.style_image_list))
+        self.style_image_list = np.array(self.style_image_list)[rand_order]
         self.stylePath = stylePath
         self.fineSize = fineSize
         #self.normalize = transforms.Normalize(mean=[103.939,116.779,123.68],std=[1, 1, 1])
@@ -42,20 +44,22 @@ class Dataset(data.Dataset):
         styleImg = default_loader(styleImgPath)
 
         # resize
-        # if(self.fineSize != 0):
-            # w, h = contentImg.size
-            # if(w > h):
-                # if(w != self.fineSize):
-                    # neww = self.fineSize
-                    # newh = int(h*neww/w)
-                    # contentImg = contentImg.resize((neww, newh))
-                    # styleImg = styleImg.resize((2048, 2048))
-            # else:
-                # if(h != self.fineSize):
-                    # newh = self.fineSize
-                    # neww = int(w*newh/h)
-                    # contentImg = contentImg.resize((neww,newh))
-                    # styleImg = styleImg.resize((2048, 2048))
+        if(self.fineSize != 0):
+            w, h = contentImg.size
+            if(w > h):
+                if(w != self.fineSize):
+                    neww = self.fineSize
+                    newh = int(h*neww/w)
+                    # neww, newh = 1280, 720
+                    contentImg = contentImg.resize((neww, newh))
+                    styleImg = styleImg.resize((neww, newh))
+            else:
+                if(h != self.fineSize):
+                    newh = self.fineSize
+                    neww = int(w*newh/h)
+                    # neww, newh = 720, 1280
+                    contentImg = contentImg.resize((neww,newh))
+                    styleImg = styleImg.resize((neww, newh))
 
 
         # Preprocess Images
