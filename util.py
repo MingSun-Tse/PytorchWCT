@@ -10,73 +10,73 @@ from PIL import Image
 from modelsNIPS import decoder1,decoder2,decoder3,decoder4,decoder5
 from modelsNIPS import encoder1,encoder2,encoder3,encoder4,encoder5
 import torch.nn as nn
+
+# original VGG-19 model
 from model import Encoder1, Encoder2, Encoder3, Encoder4, Encoder5
 from model import Decoder1, Decoder2, Decoder3, Decoder4, Decoder5
+
 # 10x model
 from model import SmallEncoder3_10x, SmallEncoder4_10x, SmallEncoder5_10x
 from model import SmallDecoder3_10x, SmallDecoder4_10x, SmallDecoder5_10x
 # 16x model
-from model import SmallEncoder2_16x_plus, SmallEncoder3_16x_plus, SmallEncoder4_16x_plus, SmallEncoder5_16x_plus
-from model import SmallDecoder2_16x,      SmallDecoder3_16x,       SmallDecoder4_16x,     SmallDecoder5_16x
-       
+from model import SmallEncoder2_16x_plus, SmallEncoder3_16x_plus,  SmallEncoder4_16x_plus, SmallEncoder5_16x_plus
+from model import SmallDecoder2_16x,      SmallDecoder3_16x,       SmallDecoder4_16x,      SmallDecoder5_16x
+# 16x inference model
+from model import SmallEncoder1_16x_plus_inf, SmallEncoder2_16x_plus_inf, SmallEncoder3_16x_plus_inf, SmallEncoder4_16x_plus_inf, SmallEncoder5_16x_plus_inf
+from model import SmallDecoder1_16x_inf,      SmallDecoder2_16x_inf,      SmallDecoder3_16x_inf,      SmallDecoder4_16x_inf,      SmallDecoder5_16x_inf
+from model import SmallEncoder5_16x_plus_inf_fakeE3
+from model import SmallEncoder5_16x_plus_inf_fakeE2, SmallDecoder5_16x_inf_fakeD2
+
+
 class WCT(nn.Module):
     def __init__(self, args):
         super(WCT, self).__init__()
         self.gpu = args.gpu
         # load pre-trained network
         if args.mode == None:
-          vgg1 = load_lua(args.vgg1)
-          decoder1_torch = load_lua(args.decoder1)
-          vgg2 = load_lua(args.vgg2)
-          decoder2_torch = load_lua(args.decoder2)
-          vgg3 = load_lua(args.vgg3)
-          decoder3_torch = load_lua(args.decoder3)
-          vgg4 = load_lua(args.vgg4)
-          decoder4_torch = load_lua(args.decoder4)
-          vgg5 = load_lua(args.vgg5)
-          decoder5_torch = load_lua(args.decoder5)
-          self.e1 = encoder1(vgg1)
-          self.d1 = decoder1(decoder1_torch)
-          self.e2 = encoder2(vgg2)
-          self.d2 = decoder2(decoder2_torch)
-          self.e3 = encoder3(vgg3)
-          self.d3 = decoder3(decoder3_torch)
-          self.e4 = encoder4(vgg4)
-          self.d4 = decoder4(decoder4_torch)
-          self.e5 = encoder5(vgg5)
-          self.d5 = decoder5(decoder5_torch)
+          self.e1 = Encoder1(args.vgg1); self.d1 = Decoder1(args.decoder1)
+          self.e2 = Encoder2(args.vgg2); self.d2 = Decoder2(args.decoder2)
+          self.e3 = Encoder3(args.vgg3); self.d3 = Decoder3(args.decoder3)
+          self.e4 = Encoder4(args.vgg4); self.d4 = Decoder4(args.decoder4)
+          self.e5 = Encoder5(args.vgg5); self.d5 = Decoder5(args.decoder5)
         else:
-          if "10x" in args.mode:
-            self.e5 = SmallEncoder5_10x(args.e5)
-            self.d5 = SmallDecoder5_10x(args.d5)
-            self.e4 = SmallEncoder4_10x(args.e4)
-            self.d4 = SmallDecoder4_10x(args.d4)
-            self.e3 = SmallEncoder3_10x(args.e3)
-            self.d3 = SmallDecoder3_10x(args.d3)
-            self.e2 = Encoder2(args.e2)
-            self.d2 = Decoder2(args.d2)
-          elif "16x" in args.mode:
-            self.e5 = SmallEncoder5_16x_plus(args.e5)
-            self.d5 = SmallDecoder5_16x(args.d5)
-            self.e4 = SmallEncoder4_16x_plus(args.e4)
-            self.d4 = SmallDecoder4_16x(args.d4)
-            self.e3 = SmallEncoder3_16x_plus(args.e3)
-            self.d3 = SmallDecoder3_16x(args.d3)
-            self.e2 = SmallEncoder2_16x_plus(args.e2)
-            self.d2 = SmallDecoder2_16x(args.d2)
+          if args.mode == "10x":
+            self.e5 = SmallEncoder5_10x(args.e5); self.d5 = SmallDecoder5_10x(args.d5)
+            self.e4 = SmallEncoder4_10x(args.e4); self.d4 = SmallDecoder4_10x(args.d4)
+            self.e3 = SmallEncoder3_10x(args.e3); self.d3 = SmallDecoder3_10x(args.d3)
+            self.e2 = Encoder2(args.e2); self.d2 = Decoder2(args.d2)
+            self.e1 = Encoder1(args.e1); self.d1 = Decoder1(args.d1)
+          
+          elif args.mode == "16x":
+            self.e5 = SmallEncoder5_16x_plus(args.e5); self.d5 = SmallDecoder5_16x(args.d5)
+            self.e4 = SmallEncoder4_16x_plus(args.e4); self.d4 = SmallDecoder4_16x(args.d4)
+            self.e3 = SmallEncoder3_16x_plus(args.e3); self.d3 = SmallDecoder3_16x(args.d3)
+            self.e2 = SmallEncoder2_16x_plus(args.e2); self.d2 = SmallDecoder2_16x(args.d2)
+            self.e1 = Encoder1(args.e1); self.d1 = Decoder1(args.d1)
+          
+          elif args.mode == "16x_inf":
+            self.e5 = SmallEncoder5_16x_plus_inf(args.e5); self.d5 = SmallDecoder5_16x_inf(args.d5)
+            self.e4 = SmallEncoder4_16x_plus_inf(args.e4); self.d4 = SmallDecoder4_16x_inf(args.d4)
+            self.e3 = SmallEncoder3_16x_plus_inf(args.e3); self.d3 = SmallDecoder3_16x_inf(args.d3)
+            self.e2 = SmallEncoder2_16x_plus_inf(args.e2); self.d2 = SmallDecoder2_16x_inf(args.d2)
+            self.e1 = SmallEncoder1_16x_plus_inf(args.e1); self.d1 = SmallDecoder1_16x_inf(args.d1)
+            
+          elif args.mode == "16x_inf_fake":
+            # self.e5 = SmallEncoder5_16x_plus_inf(args.e5); self.d5 = SmallDecoder5_16x_inf(args.d5)
+            # self.e4 = SmallEncoder4_16x_plus_inf(args.e4); self.d4 = SmallDecoder4_16x_inf(args.d4)
+            # self.e3 = SmallEncoder5_16x_plus_inf_fakeE3(args.e3); self.d3 = SmallDecoder3_16x_inf(args.d3)
+            # self.e2 = SmallEncoder5_16x_plus_inf_fakeE2(args.e2); self.d2 = SmallDecoder5_16x_inf_fakeD2(args.d2)
+            self.e1 = SmallEncoder1_16x_plus_inf(); self.d1 = SmallDecoder1_16x_inf()
           else:
-            print("mode wrong")
+            print("wrong mode")
             exit(1)
-          self.e1 = Encoder1(args.e1)
-          self.d1 = Decoder1(args.d1)
-    
     def whiten_and_color(self, cF, sF):
         print("\n" + "-" * 10 + " whiten_and_color")
         cFSize = cF.size()
         c_mean = torch.mean(cF, 1) # c * (h x w)
         c_mean = c_mean.unsqueeze(1).expand_as(cF)
         cF = cF - c_mean
-        contentConv = torch.mm(cF, cF.t()).div(cFSize[1] - 1) + torch.eye(cFSize[0]).double().cuda(self.gpu)
+        contentConv = torch.mm(cF, cF.t()).div(cFSize[1] - 1) + torch.eye(cFSize[0]).double()#.cuda(self.gpu)
         c_u, c_e, c_v = torch.svd(contentConv, some=False);
 
         k_c = cFSize[0]
@@ -107,6 +107,7 @@ class WCT(nn.Module):
         targetFeature = torch.mm(torch.mm(torch.mm(s_v[:,0:k_s], torch.diag(s_d)), (s_v[:,0:k_s].t())), whiten_cF)
         targetFeature = targetFeature + s_mean.unsqueeze(1).expand_as(targetFeature)
         torch.cuda.empty_cache()
+        print("-" * 10 + " whiten_and_color done\n")
         return targetFeature
     
     def transform(self,cF,sF,csF,alpha):
