@@ -1,4 +1,5 @@
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 import torch
 import argparse
 from PIL import Image
@@ -57,9 +58,29 @@ parser.add_argument('--decoder1', default='models/feature_invertor_conv1_1.pth',
 # parser.add_argument('--d2', default='../KD/Experiments/Small16xDecoder/e2/weights/2SD_16x_QA_E16S6000.pth')
 # parser.add_argument('--d1', default='../KD/Bin/models/my_decoder/1BD_E30S0.pth')
 
-#### 16x model -- ploss and iloss(wo sloss)
-# parser.add_argument('--e5', default='../KD/Bin/models/small16x_encoder/5SE_16x_QA_E20S0.pth')
-# parser.add_argument('--d5', default='../KD/Experiments/AbaltionStudy/small16x_d5_no_sloss/weights/12-20181011-1609_5SD_16x_E13S4000.pth')
+#### FP16x model
+# parser.add_argument('--e5', default='../KD/Bin/convert_caffemodel_to_pth/normalise_vgg/fp16x_subset1000/fp16x_normalised_FP16x_5E.pth')
+# parser.add_argument('--e4', default='../KD/Bin/convert_caffemodel_to_pth/normalise_vgg/fp16x_subset1000/fp16x_normalised_FP16x_4E.pth')
+# parser.add_argument('--e3', default='../KD/Bin/convert_caffemodel_to_pth/normalise_vgg/fp16x_subset1000/fp16x_normalised_FP16x_3E.pth')
+# parser.add_argument('--e2', default='../KD/Bin/convert_caffemodel_to_pth/normalise_vgg/fp16x_subset1000/fp16x_normalised_FP16x_2E.pth')
+# parser.add_argument('--e1', default='../KD/Bin/convert_caffemodel_to_pth/normalise_vgg/fp16x_subset1000/fp16x_normalised_FP16x_1E.pth')
+# parser.add_argument('--d5', default='../KD/Experiments/SmallFP16xDecoder/e5/weights/12-20181022-0801_5SD_FP16x_E25S0-3.pth')
+# parser.add_argument('--d4', default='../KD/Experiments/SmallFP16xDecoder/e4_reimpl/weights/12-20181023-0551_4SD_FP16x_E25S0-3.pth')
+# parser.add_argument('--d3', default='../KD/Experiments/SmallFP16xDecoder/e3/weights/12-20181022-1528_3SD_FP16x_E25S0-3.pth')
+# parser.add_argument('--d2', default='../KD/Experiments/SmallFP16xDecoder/e2/weights/12-20181022-1529_2SD_FP16x_E25S0-3.pth')
+# parser.add_argument('--d1', default='../KD/Experiments/SmallFP16xDecoder/e1/weights/12-20181022-1529_1SD_FP16x_E25S0-3.pth')
+
+# #### JointED 16x model
+# parser.add_argument('--e5', default='../KD/Experiments/Small16xEncoder/e5_JointED/weights/12-20181022-1654_5SED_16x_E30S0-2.pth')
+# parser.add_argument('--d5', default='../KD/Experiments/Small16xEncoder/e5_JointED/weights/12-20181022-1654_5SED_16x_E30S0-3.pth')
+# parser.add_argument('--e4', default='../KD/Experiments/Small16xEncoder/e4_JointED/weights/12-20181023-0618_4SED_16x_E15S0-2.pth')
+# parser.add_argument('--d4', default='../KD/Experiments/Small16xEncoder/e4_JointED/weights/12-20181023-0618_4SED_16x_E15S0-3.pth')
+# parser.add_argument('--e3', default='../KD/Experiments/Small16xEncoder/e3_JointED/weights/12-20181023-0619_3SED_16x_E16S0-2.pth')
+# parser.add_argument('--d3', default='../KD/Experiments/Small16xEncoder/e3_JointED/weights/12-20181023-0619_3SED_16x_E16S0-3.pth')
+# parser.add_argument('--e2', default='../KD/Experiments/Small16xEncoder/e2_JointED/weights/12-20181023-0620_2SED_16x_E17S0-2.pth')
+# parser.add_argument('--d2', default='../KD/Experiments/Small16xEncoder/e2_JointED/weights/12-20181023-0620_2SED_16x_E17S0-3.pth')
+# parser.add_argument('--e1', default='../KD/Experiments/Small16xEncoder/e1_JointED/weights/12-20181023-0641_1SED_16x_E19S0-2.pth')
+# parser.add_argument('--d1', default='../KD/Experiments/Small16xEncoder/e1_JointED/weights/12-20181023-0641_1SED_16x_E19S0-3.pth')
 
 # #### 16x model -- first UHD model
 # parser.add_argument('--e5', default='../KD/Bin/models/small16x_encoder/5SE_16x_QA_E20S0.pth')
@@ -73,7 +94,7 @@ parser.add_argument('--decoder1', default='models/feature_invertor_conv1_1.pth',
 # parser.add_argument('--d2', default='../KD/Experiments/Small16xDecoder_2/e2/weights/2SD_16x_QA_E26S2000.pth')
 # parser.add_argument('--d1', default='../KD/Bin/models/my_decoder/1BD_E30S0.pth')
 
-# #### 16x model -- first UHD model, trained more
+# #### 16x model -- first UHD model, decoder trained more
 # parser.add_argument('--e5', default='../KD/Bin/models/small16x_encoder/5SE_16x_QA_E20S0.pth')
 # parser.add_argument('--e4', default='../KD/Bin/models/small16x_encoder/4SE_16x_QA_E20S0.pth')
 # parser.add_argument('--e3', default='../KD/Bin/models/small16x_encoder/3SE_16x_QA_E17S9000.pth')
@@ -91,11 +112,16 @@ parser.add_argument('--e4', default='../KD/Bin/models/small16x_encoder/4SE_16x_Q
 parser.add_argument('--e3', default='../KD/Bin/models/small16x_encoder/3SE_16x_QA_E17S9000.pth')
 parser.add_argument('--e2', default='../KD/Bin/models/small16x_encoder/2SE_16x_QA_E19S6000.pth')
 parser.add_argument('--e1', default='../KD/Bin/models/small16x_encoder/1SE_16x_QA_E18S1000.pth')
-parser.add_argument('--d5', default='../KD/Experiments/Small16xDecoder_2/e5/weights/5SD_16x_QA_E13S9000.pth')
-parser.add_argument('--d4', default='../KD/Experiments/Small16xDecoder_2/e4/weights/4SD_16x_QA_E14S5000.pth')
+# parser.add_argument('--d5', default='../KD/Experiments/Small16xDecoder_2/e5/weights/5SD_16x_QA_E13S9000.pth')
+# parser.add_argument('--d4', default='../KD/Experiments/Small16xDecoder_2/e4/weights/4SD_16x_QA_E14S5000.pth')
+# parser.add_argument('--d3', default='../KD/Experiments/Small16xDecoder_2/e3/weights/3SD_16x_QA_E25S0.pth')
+# parser.add_argument('--d2', default='../KD/Experiments/Small16xDecoder_2/e2/weights/2SD_16x_QA_E26S2000.pth')
+# parser.add_argument('--d1', default='../KD/Experiments/Small16xDecoder_2/e1/weights/1SD_16x_QA_E11S8000.pth')
+parser.add_argument('--d5', default='../KD/Experiments/Small16xDecoder_2/e5/weights/5SD_16x_QA_E25S0.pth')
+parser.add_argument('--d4', default='../KD/Experiments/Small16xDecoder_2/e4/weights/4SD_16x_QA_E25S0.pth')
 parser.add_argument('--d3', default='../KD/Experiments/Small16xDecoder_2/e3/weights/3SD_16x_QA_E25S0.pth')
-parser.add_argument('--d2', default='../KD/Experiments/Small16xDecoder_2/e2/weights/2SD_16x_QA_E26S2000.pth')
-parser.add_argument('--d1', default='../KD/Experiments/Small16xDecoder_2/e1/weights/1SD_16x_QA_E11S8000.pth')
+parser.add_argument('--d2', default='../KD/Experiments/Small16xDecoder_2/e2/weights/2SD_16x_QA_E25S0.pth')
+parser.add_argument('--d1', default='../KD/Experiments/Small16xDecoder_2/e1/weights/1SD_16x_QA_E25S0.pth')
 
 #### 10x model
 # parser.add_argument('--e5', default='../KD/Bin/models/small10x_encoder/5SE_10x_E24S0.pth')
@@ -108,8 +134,6 @@ parser.add_argument('--d1', default='../KD/Experiments/Small16xDecoder_2/e1/weig
 # parser.add_argument('--d3', default='../KD/Bin/models/small10x_decoder/3SD_10x_E29S5000.pth')
 # parser.add_argument('--d2', default='../KD/Bin/models/my_decoder/2BD_E30S0.pth')
 # parser.add_argument('--d1', default='../KD/Bin/models/my_decoder/1BD_E30S0.pth')
-
-
 
 args = parser.parse_args()
 

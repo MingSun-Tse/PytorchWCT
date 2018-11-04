@@ -28,12 +28,11 @@ class Dataset(data.Dataset):
       else:
         self.contentPath = contentPath
         self.stylePath   = stylePath
-        self.content_image_list = [x for x in listdir(contentPath) if is_image_file(x) and picked_content_mark in x]
-        self.style_image_list   = [x for x in listdir(stylePath)   if is_image_file(x) and picked_style_mark in x]
-        if picked_style_mark != ".":
-          self.style_image_list *= len(self.content_image_list)
-        rand_order = np.random.permutation(len(self.style_image_list))
-        self.style_image_list = np.array(self.style_image_list) # [rand_order]
+        content_imgs = [x for x in listdir(contentPath) if is_image_file(x) and picked_content_mark in x]
+        style_imgs =   [x for x in listdir(stylePath)   if is_image_file(x) and picked_style_mark   in x]
+        pairs = [[c, s] for c in content_imgs for s in style_imgs]
+        self.content_image_list = list(np.array(pairs)[:, 0])
+        self.style_image_list   = list(np.array(pairs)[:, 1])
       
       # self.normalize = transforms.Normalize(mean=[103.939,116.779,123.68],std=[1, 1, 1])
       # normalize = transforms.Normalize(mean=[123.68,103.939,116.779],std=[1, 1, 1])
@@ -58,7 +57,7 @@ class Dataset(data.Dataset):
             # newh = self.fineSize
             # neww = int(w * newh / h)
           contentImg = contentImg.resize((self.fineSize, self.fineSize)) # if using fine size, it may well be testing, so use square image.
-          styleImg   = styleImg.resize((self.fineSize, self.fineSize))
+          # styleImg   = styleImg.resize((self.fineSize, self.fineSize)) # style does not need resize
         contentImg = transforms.ToTensor()(contentImg)
         styleImg   = transforms.ToTensor()(styleImg)
         return contentImg.squeeze(0), styleImg.squeeze(0), \
