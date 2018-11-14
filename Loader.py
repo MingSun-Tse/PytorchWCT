@@ -57,7 +57,7 @@ class Dataset(data.Dataset):
             # newh = self.fineSize
             # neww = int(w * newh / h)
           contentImg = contentImg.resize((self.fineSize, self.fineSize)) # if using fine size, it may well be testing, so use square image.
-          # styleImg   = styleImg.resize((self.fineSize, self.fineSize)) # style does not need resize
+          styleImg   = styleImg.resize((self.fineSize, self.fineSize))
         contentImg = transforms.ToTensor()(contentImg)
         styleImg   = transforms.ToTensor()(styleImg)
         return contentImg.squeeze(0), styleImg.squeeze(0), \

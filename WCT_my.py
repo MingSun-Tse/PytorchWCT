@@ -11,6 +11,7 @@ from util import *
 import scipy.misc
 from torch.utils.serialization import load_lua
 import time
+from utils import logprint
 
 parser = argparse.ArgumentParser(description='WCT Pytorch')
 parser.add_argument('--UHD_contentPath',default='images/UHD_content')
@@ -150,6 +151,9 @@ loader = torch.utils.data.DataLoader(dataset=dataset,
                                      batch_size=1,
                                      shuffle=False)
 
+logprint(args.log_mark)
+log = open("samples/log_%s_%s.txt" % (args.mode, args.log_mark), "w+")
+logprint(args._get_kwargs(), log)
 
 wct = WCT(args)
 @torch.no_grad()
@@ -171,26 +175,28 @@ csF = torch.Tensor()
 if(args.cuda):
     csF = csF.cuda(args.gpu)
     wct.cuda(args.gpu)
+
+logprint("number of pairs: %s" % len(loader), log)
 for i, (cImg, sImg, imname) in enumerate(loader):
     imname = imname[0]
-    print('\n' + '*' * 30 + ' Transferring "%s"' % imname)
+    logprint('\n' + '*' * 30 + '#%s: Transferring "%s"' % (i, imname), log)
     if (args.cuda):
         cImg = cImg.cuda(args.gpu)
         sImg = sImg.cuda(args.gpu)
     start_time = time.time()
     
     # WCT Style Transfer
-    for i in range(args.num_run):
+    for k in range(args.num_run):
       cImg = styleTransfer(wct.e5, wct.d5, cImg, sImg, csF)
-      cImg = styleTransfer(wct.e4, wct.d4, cImg, sImg, csF)
-      cImg = styleTransfer(wct.e3, wct.d3, cImg, sImg, csF)
-      cImg = styleTransfer(wct.e2, wct.d2, cImg, sImg, csF)
-      cImg = styleTransfer(wct.e1, wct.d1, cImg, sImg, csF)
+      # cImg = styleTransfer(wct.e4, wct.d4, cImg, sImg, csF)
+      # cImg = styleTransfer(wct.e3, wct.d3, cImg, sImg, csF)
+      # cImg = styleTransfer(wct.e2, wct.d2, cImg, sImg, csF)
+      # cImg = styleTransfer(wct.e1, wct.d1, cImg, sImg, csF)
     vutils.save_image(cImg.data.cpu().float(), os.path.join(args.outf, args.log_mark + "_" + str(args.alpha) + "_" + imname))
     
     end_time = time.time()
-    print('Elapsed time is: %f' % (end_time - start_time))
+    logprint('Elapsed time is: %f' % (end_time - start_time), log)
     avgTime += (end_time - start_time)
 
-print('Processed %d images. Averaged time is %f' % ((i+1),avgTime/(i+1)))
-print(args.log_mark)
+logprint('Processed %d images. Averaged time is %f' % ((i+1),avgTime/(i+1)), log)
+log.close()
